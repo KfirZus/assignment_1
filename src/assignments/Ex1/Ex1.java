@@ -113,14 +113,52 @@ public class Ex1 {
 	 * @param poly the polynomial function represented as an array of doubles
 	 * @return String representing the polynomial function:
 	 */
-	public static String poly(double[] poly) {
-		String ans = "";
-		if(poly.length==0) {ans="0";}
-		else {
-            if poly
-		}
-		return ans;
-	}
+    public static String poly(double[] poly) {
+        if (poly == null || poly.length == 0) {
+            return "0";
+        }
+
+        StringBuilder ans = new StringBuilder();
+        boolean first = true; // if nothing is yet printed
+
+        // from highest to lowest power
+        for (int power = poly.length - 1; power >= 0; power--) {
+            double coef = poly[power];
+            if (coef == 0) {
+                continue; // skipping '0' coefs
+            }
+
+            // sign before next coef ( if not first)
+            if (first) {
+                first = false;
+            } else {
+                if (coef > 0) {
+                    ans.append(" +");
+                } else {
+                    ans.append(" ");
+                }
+            }
+
+            // adding the coef
+            if (power == 0) {
+                // last coef
+                ans.append(coef);
+            } else {
+                // there's an x
+                ans.append(coef).append("x");
+                if (power > 1) {
+                    ans.append("^").append(power);
+                }
+            }
+        }
+
+        // if skips all (arr values are 0)
+        if (first) {
+            return "0";
+        }
+
+        return ans.toString();
+    }
 	/**
 	 * Given two polynomial functions (p1,p2), a range [x1,x2] and an epsilon eps. This function computes an x value (x1<=x<=x2)
 	 * for which |p1(x) -p2(x)| < eps, assuming (p1(x1)-p2(x1)) * (p1(x2)-p2(x2)) <= 0.
