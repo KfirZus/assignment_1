@@ -102,7 +102,10 @@ public class Ex1 {
         for(int x=0; x<=n; x++){
             double y1 = f(p1, x);
             double y2 = f(p2, x);
-            if(Math.abs(y1 - y2) > EPS) {ans = false; break;}
+            if(Math.abs(y1 - y2) > EPS) {
+                ans = false;
+                break;
+            }
         }
         return ans;
 	}
@@ -159,6 +162,19 @@ public class Ex1 {
 
         return ans.toString();
     }
+
+    /**
+     * given two polynomial functions (p1,p2) and an x value, returns the diffrence between them on point x
+     * @param p1 - first polynomial function
+     * @param p2 - second polynomial function
+     * @param x - point the function goes through
+     * @return - difference
+     */
+    public static double g(double[] p1,double[] p2 , double x){
+        return f(p1, x) - f(p2, x);
+    }
+
+
 	/**
 	 * Given two polynomial functions (p1,p2), a range [x1,x2] and an epsilon eps. This function computes an x value (x1<=x<=x2)
 	 * for which |p1(x) -p2(x)| < eps, assuming (p1(x1)-p2(x1)) * (p1(x2)-p2(x2)) <= 0.
@@ -169,13 +185,26 @@ public class Ex1 {
 	 * @param eps - epsilon (positive small value (often 10^-3, or 10^-6).
 	 * @return an x value (x1<=x<=x2) for which |p1(x) - p2(x)| < eps.
 	 */
-	public static double sameValue(double[] p1, double[] p2, double x1, double x2, double eps) {
-		double ans = x1;
-        /** add you code below
 
-         /////////////////// */
-		return ans;
-	}
+	public static double sameValue(double[] p1, double[] p2, double x1, double x2, double eps) {
+
+        double v1 = g(p1, p2, x1);
+        double xm = (x1 + x2) / 2;
+        double vm = g(p1, p2, xm);
+
+        //polynoms almost equal on point xm - stops recursion
+        if (Math.abs(vm) < eps){
+            return xm;
+        }
+        //root is on the left side of xm
+        if((v1 * vm) <= 0) {
+            return sameValue(p1, p2, x1, xm, eps);
+        }
+        //root is on the right side of xm
+        return sameValue(p1, p2, xm, x2, eps);
+    }
+
+
 	/**
 	 * Given a polynomial function (p), a range [x1,x2] and an integer with the number (n) of sample points.
 	 * This function computes an approximation of the length of the function between f(x1) and f(x2) 
@@ -189,10 +218,18 @@ public class Ex1 {
 	 * @return the length approximation of the function between f(x1) and f(x2).
 	 */
 	public static double length(double[] p, double x1, double x2, int numberOfSegments) {
-		double ans = x1;
-        /** add you code below
+		double ans = 0;
+        double dx = (x2 - x1) / numberOfSegments;
+        for(int i=0; i<numberOfSegments; i++){
+            double xl = x1 + i*dx;
+            double xr = xl + dx;
+            double yl = f(p, xl);
+            double yr = f(p, xr);
+            double dy = yr - yl;
+            double len = Math.sqrt(dx*dx + dy*dy);
+            ans+=len;
 
-         /////////////////// */
+        }
 		return ans;
 	}
 	
@@ -209,9 +246,21 @@ public class Ex1 {
 	 */
 	public static double area(double[] p1,double[]p2, double x1, double x2, int numberOfTrapezoid) {
 		double ans = 0;
-        /** add you code below
+        double dx = (x2 - x1) / numberOfTrapezoid;
+        for(int i=0; i<numberOfTrapezoid; i++){
+            double xi = x1 + i*dx;
+            double nextx = x1 + (i + 1) * dx;
+            double y1p1 = f(p1,xi);
+            double y1p2 = f(p2, xi);
+            double y2p1 = f(p1,nextx);
+            double y2p2 = f(p2, nextx);
 
-         /////////////////// */
+            double dLeft = Math.abs(y1p1 - y1p2);
+            double dRight = Math.abs(y2p1 - y2p2);
+            double A = ((dLeft + dRight) / 2) * dx;
+            ans += A;
+
+        }
 		return ans;
 	}
 	/**
@@ -220,40 +269,129 @@ public class Ex1 {
 	 * getPolynomFromString(poly(p)) should return an array equals to p.
 	 * 
 	 * @param p - a String representing polynomial function.
-	 * @return
+	 * @return polynom array
 	 */
 	public static double[] getPolynomFromString(String p) {
 		double [] ans = ZERO;//  -1.0x^2 +3.0x +2.0
-        /** add you code below
 
-         /////////////////// */
+        if (p != null && !p.trim().isEmpty()){
+
+            String s = p.replace(" ",""); // "-1.0x^2+3.0x+2.0"
+            s = s.replace("-", "+-");// "+-1.0x^2+3.0x+2.0"
+
+            if (s.charAt(0) == '+') {
+                s = s.substring(1); // "-1.0x^2+3.0x+2.0"
+            }
+
+            String[] terms = s.split("\\+");// ["-1.0x^2","3.0x","2.0"]
+            int maxP = 0;
+            for (String term : terms) {
+                if (term.isEmpty()) continue;
+
+                int power;
+                if (term.contains("x^")) {
+                    power = Integer.parseInt(term.substring(term.indexOf('^') + 1));
+                } else if (term.contains("x")) {
+                    power = 1;
+                } else {
+                    power = 0;
+                }
+                if (power > maxP) {
+                    maxP = power;
+                }
+            }
+            double[] coeffs = new double[maxP + 1];
+
+            for (String term : terms) {
+                if (term.isEmpty()) continue;
+
+                int power;
+                double coef;
+
+                if (term.contains("x")) {
+                    int xIndex = term.indexOf('x');
+                    String coefStr = term.substring(0, xIndex);  // what's before x
+
+                    if (coefStr.isEmpty() || coefStr.equals("+")) {
+                        coef = 1.0;
+                    } else if (coefStr.equals("-")) {
+                        coef = -1.0;
+                    } else {
+                        coef = Double.parseDouble(coefStr);
+                    }
+
+                    if (term.contains("^")) {
+                        power = Integer.parseInt(term.substring(term.indexOf('^') + 1));
+                    } else {
+                        power = 1;
+                    }
+                } else {
+                    // no x
+                    coef = Double.parseDouble(term);
+                    power = 0;
+                }
+
+                // in case of multiples with same power sum
+                coeffs[power] += coef;
+            }
+            ans = coeffs;
+        }
+
 		return ans;
 	}
 	/**
 	 * This function computes the polynomial function which is the sum of two polynomial functions (p1,p2)
-	 * @param p1
-	 * @param p2
-	 * @return
+	 * @param p1 - first polynom
+	 * @param p2 - second polynom
+	 * @return sum of p1 and p2
 	 */
 	public static double[] add(double[] p1, double[] p2) {
 		double [] ans = ZERO;//
-        /** add you code below
 
-         /////////////////// */
+        if(p1 != null && p2 !=null){
+
+            int p1Len = p1.length;
+            int p2Len = p2.length;
+            int minLen = Math.min(p1Len,p2Len);
+            ans = new double[Math.max(p1Len,p2Len)];
+            for (int i = 0; i < minLen; i++) {
+                ans[i] = p1[i] + p2[i];
+            }
+            if(p1Len > p2Len){
+                for(int i = minLen; i < p1Len; i ++){
+                    ans[i] = p1[i];
+                }
+            }else if(p2Len > p1Len){
+                for(int i = minLen; i < p2Len; i ++){
+                    ans[i] = p2[i];
+                }
+            }
+        }
 		return ans;
 	}
 	/**
 	 * This function computes the polynomial function which is the multiplication of two polynoms (p1,p2)
-	 * @param p1
-	 * @param p2
-	 * @return
+	 * @param p1 - first polynom
+	 * @param p2 - second polynom
+	 * @return ans = multiplication of p1 and p2
 	 */
 	public static double[] mul(double[] p1, double[] p2) {
-		double [] ans = ZERO;//
-        /** add you code below
 
-         /////////////////// */
-		return ans;
+        if (p1 == null || p2 == null) return ZERO;
+
+        int n1 = p1.length;
+        int n2 = p2.length;
+
+
+        double[] ans = new double[n1 + n2 - 1];
+
+        for (int i = 0; i < n1; i++) {
+            for (int j = 0; j < n2; j++) {
+                ans[i + j] += p1[i] * p2[j];
+            }
+        }
+
+        return ans;
 	}
 	/**
 	 * This function computes the derivative of the p0 polynomial function.
@@ -261,10 +399,14 @@ public class Ex1 {
 	 * @return
 	 */
 	public static double[] derivative (double[] po) {
-		double [] ans = ZERO;//
-        /** add you code below
+        if (po == null || po.length <= 1) return ZERO;
 
-         /////////////////// */
-		return ans;
+        double[] ans = new double[po.length - 1];
+
+        for (int i = 1; i < po.length; i++) {
+            ans[i - 1] = po[i] * i;
+        }
+
+        return ans;
 	}
 }
