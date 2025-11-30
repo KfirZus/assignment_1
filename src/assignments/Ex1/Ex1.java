@@ -4,7 +4,6 @@ package assignments.Ex1;
  * Introduction to Computer Science 2026, Ariel University,
  * Ex1: arrays, static functions and JUnit
  * https://docs.google.com/document/d/1GcNQht9rsVVSt153Y8pFPqXJVju56CY4/edit?usp=sharing&ouid=113711744349547563645&rtpof=true&sd=true
- *
  * This class represents a set of static methods on a polynomial functions - represented as an array of doubles.
  * The array {0.1, 0, -3, 0.2} represents the following polynomial function: 0.2x^3-3x^2+0.1
  * This is the main Class you should implement (see "add your code below")
@@ -20,7 +19,7 @@ public class Ex1 {
 	/**
 	 * Computes the f(x) value of the polynomial function at x.
 	 * @param poly - polynomial function
-	 * @param x
+	 * @param x - x point
 	 * @return f(x) - the polynomial function value at x.
 	 */
 	public static double f(double[] poly, double x) {
@@ -53,8 +52,8 @@ public class Ex1 {
 	 * This function computes a polynomial representation from a set of 2D points on the polynom.
 	 * The solution is based on: //	http://stackoverflow.com/questions/717762/how-to-calculate-the-vertex-of-a-parabola-given-three-points
 	 * Note: this function only works for a set of points containing up to 3 points, else returns null.
-	 * @param xx
-	 * @param yy
+	 * @param xx - x points
+	 * @param yy - y points
 	 * @return an array of doubles representing the coefficients of the polynom.
 	 */
 	public static double[] PolynomFromPoints(double[] xx, double[] yy) {
@@ -287,22 +286,21 @@ public class Ex1 {
 	 * @return polynom array
 	 */
 	public static double[] getPolynomFromString(String p) {
-		double [] ans = ZERO;//  -1.0x^2 +3.0x +2.0
+        double [] ans = ZERO;
 
-        if (p != null && !p.trim().isEmpty()){
+        if (p != null && !p.trim().isEmpty()) {
 
-            String s = p.replace(" ",""); // "-1.0x^2+3.0x+2.0"
-            s = s.replace("-", "+-");// "+-1.0x^2+3.0x+2.0"
+            String s = p.replace(" ","");
+            s = s.replace("-", "+-");
 
             if (s.charAt(0) == '+') {
-                s = s.substring(1); // "-1.0x^2+3.0x+2.0"
+                s = s.substring(1);
             }
 
-            String[] terms = s.split("\\+");// ["-1.0x^2","3.0x","2.0"]
+            String[] terms = s.split("\\+");
             int maxP = 0;
             for (String term : terms) {
                 if (term.isEmpty()) continue;
-
                 int power;
                 if (term.contains("x^")) {
                     power = Integer.parseInt(term.substring(term.indexOf('^') + 1));
@@ -311,10 +309,9 @@ public class Ex1 {
                 } else {
                     power = 0;
                 }
-                if (power > maxP) {
-                    maxP = power;
-                }
+                if (power > maxP) maxP = power;
             }
+
             double[] coeffs = new double[maxP + 1];
 
             for (String term : terms) {
@@ -325,15 +322,11 @@ public class Ex1 {
 
                 if (term.contains("x")) {
                     int xIndex = term.indexOf('x');
-                    String coefStr = term.substring(0, xIndex);  // what's before x
+                    String coefStr = term.substring(0, xIndex);
 
-                    if (coefStr.isEmpty() || coefStr.equals("+")) {
-                        coef = 1.0;
-                    } else if (coefStr.equals("-")) {
-                        coef = -1.0;
-                    } else {
-                        coef = Double.parseDouble(coefStr);
-                    }
+                    if (coefStr.isEmpty() || coefStr.equals("+"))coef = 1.0;
+                    else if (coefStr.equals("-"))coef = -1.0;
+                    else coef = Double.parseDouble(coefStr);
 
                     if (term.contains("^")) {
                         power = Integer.parseInt(term.substring(term.indexOf('^') + 1));
@@ -341,18 +334,36 @@ public class Ex1 {
                         power = 1;
                     }
                 } else {
-                    // no x
                     coef = Double.parseDouble(term);
                     power = 0;
                 }
 
-                // in case of multiples with same power sum
                 coeffs[power] += coef;
             }
-            ans = coeffs;
+
+            // check if all 0
+            boolean allZero = true;
+            int lastNonZero = -1;
+            for (int i = 0; i < coeffs.length; i++) {
+                if (Math.abs(coeffs[i]) > EPS) {
+                    allZero = false;
+                    lastNonZero = i;
+                }
+            }
+
+            if (allZero) {
+                ans = ZERO;
+            } else {
+                // trim trim
+                double[] trimmed = new double[lastNonZero + 1];
+                for (int i = 0; i <= lastNonZero; i++) {
+                    trimmed[i] = coeffs[i];
+                }
+                ans = trimmed;
+            }
         }
 
-		return ans;
+        return ans;
 	}
 	/**
 	 * This function computes the polynomial function which is the sum of two polynomial functions (p1,p2)
@@ -410,8 +421,8 @@ public class Ex1 {
 	}
 	/**
 	 * This function computes the derivative of the p0 polynomial function.
-	 * @param po
-	 * @return
+	 * @param po - polynom
+	 * @return the derivative of the polynom
 	 */
 	public static double[] derivative (double[] po) {
         if (po == null || po.length <= 1) return ZERO;

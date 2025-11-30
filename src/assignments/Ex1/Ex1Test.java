@@ -16,12 +16,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class Ex1Test {
 	static final double[] P1 ={2,0,3, -1,0}, P2 = {0.1,0,1, 0.1,3};
-	static double[] po1 = {2,2}, po2 = {-3, 0.61, 0.2};;
+	static double[] po1 = {2,2}, po2 = {-3, 0.61, 0.2};
 	static double[] po3 = {2,1,-0.7, -0.02,0.02};
 	static double[] po4 = {-3, 0.61, 0.2};
 	
  	@Test
-	/**
+	 /**
 	 * Tests that f(x) == poly(x).
 	 */
 	void testF() {
@@ -131,7 +131,234 @@ class Ex1Test {
         assertEquals(1.0, p[0], Ex1.EPS); // c0
         assertEquals(2.0, p[1], Ex1.EPS); // c1
     }
+    @Test
+    public void testEquals_sameReference() {
+        assertTrue(Ex1.equals(P1, P1));
+    }
 
+    @Test
+    public void testEquals_identicalArrays() {
+        double[] a = {1, 2, 3};
+        double[] b = {1, 2, 3};
+        assertTrue(Ex1.equals(a, b));
+    }
+
+    @Test
+    public void testEquals_trailingZeros() {
+        // 1 + 2x
+        double[] a = {1, 2};
+        double[] b = {1, 2, 0, 0}; //
+        assertTrue(Ex1.equals(a, b));
+    }
+
+    @Test
+    public void testEquals_differentPolynomials() {
+        double[] a = {1, 2};   // 1 + 2x
+        double[] b = {1, 3};   // 1 + 3x
+        assertFalse(Ex1.equals(a, b));
+    }
+
+    @Test
+    public void testEquals_po2po4() {
+        assertTrue(Ex1.equals(po2, po4));
+    }
+
+    @Test
+    public void testEquals_P1P2_notEqual() {
+        assertFalse(Ex1.equals(P1, P2));
+    }
+
+    @Test
+    public void testEquals_nullArguments() {
+        double[] a = {1, 2};
+        assertFalse(Ex1.equals(null, a));
+        assertFalse(Ex1.equals(a, null));
+        assertFalse(Ex1.equals(null, null));
+    }
+    @Test
+    public void testPoly_nullArray() {
+        assertEquals("0", Ex1.poly(null));
+    }
+
+    @Test
+    public void testPoly_emptyArray() {
+        assertEquals("0", Ex1.poly(new double[]{}));
+    }
+
+    @Test
+    public void testPoly_allZeroes() {
+        assertEquals("0", Ex1.poly(new double[]{0,0,0}));
+    }
+
+    @Test
+    public void testPoly_constant() {
+        assertEquals("5.0", Ex1.poly(new double[]{5}));
+    }
+
+    @Test
+    public void testPoly_linear_positive() {
+        // f(x) = 1 + 2x  → "2.0x +1.0"
+        assertEquals("2.0x +1.0", Ex1.poly(new double[]{1,2}));
+    }
+
+    @Test
+    public void testPoly_linear_negative() {
+        // f(x) = -3 + 2x  → "2.0x -3.0"
+        assertEquals("2.0x -3.0", Ex1.poly(new double[]{-3,2}));
+    }
+
+    @Test
+    public void testPoly_quadratic() {
+        // f(x) = 1 + 2x + 3x^2 → "3.0x^2 +2.0x +1.0"
+        assertEquals("3.0x^2 +2.0x +1.0", Ex1.poly(new double[]{1,2,3}));
+    }
+
+    @Test
+    public void testPoly_skipsZerosInMiddle() {
+        // f(x) = 1 + 0x + 4x^2 → "4.0x^2 +1.0"
+        assertEquals("4.0x^2 +1.0", Ex1.poly(new double[]{1,0,4}));
+    }
+
+    @Test
+    public void testPoly_negativeCoefficient() {
+        // f(x) = 1 − 5x + 3x^2 → "3.0x^2 -5.0x +1.0"
+        assertEquals("3.0x^2 -5.0x +1.0", Ex1.poly(new double[]{1,-5,3}));
+    }
+
+    @Test
+    public void testPoly_highDegree() {
+        // f(x) = 7 + 0x + 0x^2 - 2x^3 → "-2.0x^3 +7.0"
+        assertEquals("-2.0x^3 +7.0", Ex1.poly(new double[]{7,0,0,-2}));
+    }
+    @Test
+    public void testSameValue_x_vs_zero_rootAt0() {
+        // f1(x) = x, f2(x) = 0
+        double[] p1 = {0, 1};      // x
+        double[] p2 = Ex1.ZERO;    // 0
+
+        double root = Ex1.sameValue(p1, p2, -1, 1, Ex1.EPS);
+        assertEquals(0.0, root, Ex1.EPS);
+    }
+
+    @Test
+    public void testSameValue_lineAndZero_rootAt1() {
+        // f1(x) = x - 1, f2(x) = 0
+        double[] p1 = {-1, 1};     // x - 1
+        double[] p2 = Ex1.ZERO;    // 0
+
+        double root = Ex1.sameValue(p1, p2, 0, 2, Ex1.EPS);
+        assertEquals(1.0, root, Ex1.EPS);
+    }
+    @Test
+    public void testSameValue_withInternalRoot_notAtEnds() {
+        // f1(x) = x^2, f2(x) = x
+        // x^2 = x -> x(x-1)=0 -> x=0 or x=1
+        // in [0.5, 2] x=1
+        double[] p1 = {0, 0, 1};   // x^2
+        double[] p2 = {0, 1};      // x
+
+        double root = Ex1.sameValue(p1, p2, 0.5, 2, Ex1.EPS);
+        assertEquals(1.0, root, Ex1.EPS);
+    }
+    @Test
+    public void testLength_straightLine() {
+        // y = x  -> from 0 to 3
+        double[] p = {0, 1};  // f(x) = x
+
+        double len = Ex1.length(p, 0, 3, 1);
+        double expected = Math.sqrt(3*3 + 3*3); // sqrt(9 + 9) = sqrt(18)
+
+        assertEquals(expected, len, 1e-7);
+    }
+    @Test
+    public void testLength_horizontalLine() {
+        // y = 5
+        double[] p = {5}; // constant
+
+        double len = Ex1.length(p, 0, 10, 50);
+        assertEquals(10.0, len, 1e-7);
+    }
+    @Test
+    public void testLength_reversedInterval() {
+        double[] p = {0, 1}; // y = x
+
+        double len1 = Ex1.length(p, 0, 3, 100);
+        double len2 = Ex1.length(p, 3, 0, 100);
+
+        // tests reverse should be equal
+        assertEquals(len1, len2, 1e-7);
+    }
+    @Test
+    public void testLength_smallSegment() {
+        double[] p = {0, 1}; // y = x
+
+        double len = Ex1.length(p, 1.0, 1.001, 10);
+        double dx = 0.001;
+        double expected = Math.sqrt(dx*dx + dx*dx); // שיפוע 1
+
+        assertEquals(expected, len, 1e-9);
+    }
+    @Test
+    public void testGetPolynomFromString_nullOrEmpty() {
+        assertArrayEquals(Ex1.ZERO, Ex1.getPolynomFromString(null), 1e-7);
+        assertArrayEquals(Ex1.ZERO, Ex1.getPolynomFromString(""), 1e-7);
+        assertArrayEquals(Ex1.ZERO, Ex1.getPolynomFromString("   "), 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_constant() {
+        double[] p = Ex1.getPolynomFromString("5.0");
+        assertArrayEquals(new double[]{5.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_simpleLinear() {
+        double[] p = Ex1.getPolynomFromString("2.0x+1.0");
+        // 1 + 2x  →  {1, 2}
+        assertArrayEquals(new double[]{1.0, 2.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_withSpacesAndMinus() {
+        double[] p = Ex1.getPolynomFromString("  -3x  +  2  ");
+        // 2 - 3x → {2, -3}
+        assertArrayEquals(new double[]{2.0, -3.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_quadratic() {
+        double[] p = Ex1.getPolynomFromString("-1.0x^2 +3.0x +2.0");
+        // -x^2 + 3x + 2 → {2, 3, -1}
+        assertArrayEquals(new double[]{2.0, 3.0, -1.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_implicitCoef1() {
+        double[] p = Ex1.getPolynomFromString("x^2 + x + 1");
+        // 1 + 1x + 1x^2 → {1,1,1}
+        assertArrayEquals(new double[]{1.0, 1.0, 1.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_implicitCoefMinus1() {
+        double[] p = Ex1.getPolynomFromString("-x^3 - x");
+        // -x^3 - x → {0, -1, 0, -1}
+        assertArrayEquals(new double[]{0.0, -1.0, 0.0, -1.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_samePowerSums() {
+        double[] p = Ex1.getPolynomFromString("x^2 + 2x^2 - 3x^2");
+        // (1+2-3)x^2 = 0 → הכול מתאפס → 0
+        assertArrayEquals(new double[]{0.0}, p, 1e-7);
+    }
+
+    @Test
+    public void testGetPolynomFromString_mixedPowers() {
+        double[] p = Ex1.getPolynomFromString("3x^4 - 2x^2 + 5");
+        // 5 - 2x^2 + 3x^4 → {5,0,-2,0,3}
+        assertArrayEquals(new double[]{5.0, 0.0, -2.0, 0.0, 3.0}, p, 1e-7);
+    }
 	@Test
 	/**
 	 * Tests that p1+p2+ (-1*p2) == p1
