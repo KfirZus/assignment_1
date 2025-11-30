@@ -28,9 +28,9 @@ class Ex1Test {
 		double fx0 = Ex1.f(po1, 0);
 		double fx1 = Ex1.f(po1, 1);
 		double fx2 = Ex1.f(po1, 2);
-		assertEquals(fx0, 2, Ex1.EPS);
-		assertEquals(fx1, 4, Ex1.EPS);
-		assertEquals(fx2, 6, Ex1.EPS);
+		assertEquals(2, fx0, Ex1.EPS);
+		assertEquals(4, fx1, Ex1.EPS);
+		assertEquals(6, fx2, Ex1.EPS);
 	}
 	@Test
 	/**
@@ -54,10 +54,84 @@ class Ex1Test {
         double px = Ex1.f(p,x);
         assertEquals(p[0],px);
     }
-    @Test
-    void testF4(){
 
+    @Test
+    public void testRootRec_linear_simple() {
+        // f(x) = x - 2
+        double[] p = {-2, 1}; // -2 + 1*x
+        double x1 = 0, x2 = 5;
+        double root = Ex1.root_rec(p, x1, x2, Ex1.EPS);
+        assertEquals(2.0, root, Ex1.EPS);
     }
+    @Test
+    public void testRootRec_quadratic_positiveRoot() {
+        // f(x) = x^2 - 4  -> שורשים ב-2 ו-(-2)
+        double[] p = {-4, 0, 1}; // -4 + 0*x + 1*x^2
+        double x1 = 0, x2 = 5;   // נופל על השורש 2
+        double root = Ex1.root_rec(p, x1, x2, Ex1.EPS);
+        assertEquals(2.0, root, Ex1.EPS);
+    }
+
+    @Test
+    public void testRootRec_quadratic_negativeRoot() {
+        // f(x) = x^2 - 4
+        double[] p = {-4, 0, 1};
+        double x1 = -5, x2 = 0;  //
+        double root = Ex1.root_rec(p, x1, x2, Ex1.EPS);
+        assertEquals(-2.0, root, Ex1.EPS);
+    }
+
+    @Test
+    public void testRootRec_epsilon() {
+        // f(x) = x - 1.5
+        double[] p = {-1.5, 1};
+        double x1 = 1, x2 = 2;
+        double eps = 1e-8;
+        double root = Ex1.root_rec(p, x1, x2, eps);
+        assertEquals(1.5, root, eps);
+    }
+    @Test
+    public void testRootRec_P1() {
+        // P1 = {2,0,3,-1,0}  => f(x) = 2 + 3x^2 - x^3
+        double root = Ex1.root_rec(P1, 3, 4, Ex1.EPS);
+        assertEquals(3.20, root, 0.01);
+    }
+    @Test
+    public void testPolynomFromPoints_null() {
+        // xx == null
+        double[] p1 = Ex1.PolynomFromPoints(null, new double[]{1, 2});
+        assertNull(p1);
+
+        // yy == null
+        double[] p2 = Ex1.PolynomFromPoints(new double[]{0, 1}, null);
+        assertNull(p2);
+
+        // diffrent len
+        double[] p3 = Ex1.PolynomFromPoints(new double[]{0, 1}, new double[]{1});
+        assertNull(p3);
+
+        // less than 2 points
+        double[] p4 = Ex1.PolynomFromPoints(new double[]{0}, new double[]{1});
+        assertNull(p4);
+
+        // more than 3 points
+        double[] p5 = Ex1.PolynomFromPoints(new double[]{0,1,2,3}, new double[]{1,2,3,4});
+        assertNull(p5);
+    }
+    @Test
+    public void testPolynomFromPoints_line_twoPoints() {
+        double[] xx = {0, 2};
+        double[] yy = {1, 5}; // y=2x+1
+
+        double[] p = Ex1.PolynomFromPoints(xx, yy);
+        assertNotNull(p);
+        assertEquals(2, p.length);
+
+        //  p[0] = c0 (קבוע), p[1] = c1 (מקדם x)
+        assertEquals(1.0, p[0], Ex1.EPS); // c0
+        assertEquals(2.0, p[1], Ex1.EPS); // c1
+    }
+
 	@Test
 	/**
 	 * Tests that p1+p2+ (-1*p2) == p1
@@ -175,6 +249,14 @@ class Ex1Test {
 		double rs2 = Ex1.sameValue(po2,po1, x1, x2, Ex1.EPS);
 		assertEquals(rs1,rs2, Ex1.EPS);
 	}
+    @Test
+    public void testSameValue_simpleRoot() {
+        double[] po_a = {0, 1};    // x
+        double[] po_b = Ex1.ZERO;  // 0
+
+        double root = Ex1.sameValue(po_a, po_b, -1, 1, Ex1.EPS);
+        assertEquals(0.0, root, Ex1.EPS);
+    }
 	@Test
 	/**
 	 * Test the area function - it should be symmetric.
@@ -213,7 +295,63 @@ class Ex1Test {
 		double[] po_b = {6, 0.1, -0.2};
 		double x1 = Ex1.sameValue(po_a,po_b, -10,-5, Ex1.EPS);
 		double a1 = Ex1.area(po_a,po_b, x1, 6, 8);
-		double area = 58.5658;
+		double area = 58.5663;
 		assertEquals(a1,area, Ex1.EPS);
 	}
+    @Test
+    /**
+     * test area beween same polynom - 0
+     */
+    public void testArea_samePoly_isZero() {
+        double[] po_a = {1, -2, 3};
+        double[] po_b = {1, -2, 3};
+        double x1 = -5;
+        double x2 = 7;
+        double a = Ex1.area(po_a, po_b, x1, x2, 100);
+        assertEquals(0.0, a, Ex1.EPS);
+    }
+    @Test
+    /**
+     * tests area of a rectangle
+     */
+    public void testArea_constAboveZero() {
+        double[] po_a = Ex1.ZERO;  // y = 0
+        double[] po_b = {2};       // y = 2
+        double x1 = 0;
+        double x2 = 3;
+        double a = Ex1.area(po_a, po_b, x1, x2, 50);
+        double expected = 6.0; // 2 * 3
+        assertEquals(expected, a, Ex1.EPS);
+    }
+    @Test
+    /**
+     * tests poly x^2
+     */
+    public void testArea_quad_vsZero() {
+        // y = x^2
+        double[] po_a = Ex1.ZERO;
+        double[] po_b = {0, 0, 1}; // 0 + 0*x + 1*x^2
+        double x1 = -1;
+        double x2 = 1;
+
+        double a = Ex1.area(po_a, po_b, x1, x2, 100);
+        double expected = 2.0 / 3.0; // integral of -1^1 x^2 dx = 2/3
+
+        assertEquals(expected, a, Ex1.EPS);
+    }
+    @Test
+    public void testArea_lineVsParabola() {
+        // f(x) = x^2
+        double[] po_a = {0, 0, 1}; // x^2
+        // g(x) = x
+        double[] po_b = {0, 1};    // x
+
+        double x1 = 0;
+        double x2 = 2;
+
+        double a = Ex1.area(po_a, po_b, x1, x2, 200);
+        double expected = 1.0; // ∫0^1 (x - x^2) + ∫1^2 (x^2 - x) = 1
+
+        assertEquals(expected, a, Ex1.EPS);
+    }
 }

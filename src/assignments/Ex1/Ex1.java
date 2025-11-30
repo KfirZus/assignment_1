@@ -58,10 +58,11 @@ public class Ex1 {
 	 * @return an array of doubles representing the coefficients of the polynom.
 	 */
 	public static double[] PolynomFromPoints(double[] xx, double[] yy) {
-		double [] ans = null;
+        if (xx == null || yy == null) return null;
+        double [] ans = null;
 		int lx = xx.length;
 		int ly = yy.length;
-		if(xx!=null && yy!=null && lx==ly && lx>1 && lx<4) {
+		if(lx==ly && lx>1 && lx<4) {
 
             if (lx == 2){
                double x1 = xx[0], y1 = yy[0];
@@ -70,7 +71,7 @@ public class Ex1 {
 
                double m = (y2 - y1) / (x2 - x1);
                double b = y1 - m * x1;
-               ans = new double[]{m, b};
+               ans = new double[]{b, m};
             }
             else{
                 double x1 = xx[0], y1 = yy[0];
@@ -83,7 +84,7 @@ public class Ex1 {
                 double b = (x3*x3*(y1 - y2) + x1*x1*(y2 - y3) + x2*x2*(y3 - y1)) / denom;
                 double c = (x2*x3*(x2 - x3)*y1 + x3*x1*(x3 - x1)*y2 + x1*x2*(x1 - x2)*y3) / denom;
 
-                ans = new double[]{a,b, c};
+                ans = new double[]{c,b, a};
 
             }
 		}
@@ -178,18 +179,18 @@ public class Ex1 {
 	public static double sameValue(double[] p1, double[] p2, double x1, double x2, double eps) {
 
         double v1 = g(p1, p2, x1);
-        double xm = (x1 + x2) / 2;
+        double xm = (x1 + x2) / 2.0;
         double vm = g(p1, p2, xm);
 
-        //polynoms almost equal on point xm - stops recursion
-        if (Math.abs(vm) < eps){
+        // polynoms almost equal on point xm - stops recursion
+        if (Math.abs(vm) < eps) {
             return xm;
         }
-        //root is on the left side of xm
-        if((v1 * vm) <= 0) {
+        // root is on the left side of xm
+        if (v1 * vm <= 0) {
             return sameValue(p1, p2, x1, xm, eps);
         }
-        //root is on the right side of xm
+        // root is on the right side of xm
         return sameValue(p1, p2, xm, x2, eps);
     }
 
@@ -234,38 +235,49 @@ public class Ex1 {
 	 * @return the approximated area between the two polynomial functions within the [x1,x2] range.
 	 */
 	public static double area(double[] p1,double[]p2, double x1, double x2, int numberOfTrapezoid) {
-        if (p1 == null || p2 == null || x1 == x2) return 0;
+        if (p1 == null || p2 == null || numberOfTrapezoid <= 0) {
+            return 0;
+        }
 
-        // make sure x1 bigger than x2
-        if (x2 < x1) {
-            double tmp = x1;
+        if (x1 == x2) return 0;
+        if (x1 > x2) { // לוודא שסדר הקצוות תקין
+            double t = x1;
             x1 = x2;
-            x2 = tmp;
+            x2 = t;
         }
 
-        // for better accuracy
-        int n = Math.max(numberOfTrapezoid, 1000);
+        double dx = (x2 - x1) / numberOfTrapezoid;
+        double sum = 0.0;
 
-        double ans = 0;
-        double dx = (x2 - x1) / n;
+        double a = x1;
+        double va = g(p1, p2, a);
 
-        for (int i = 0; i < n; i++) {
-            double xi = x1 + i * dx;
-            double nextx = x1 + (i + 1) * dx;
+        for (int i = 0; i < numberOfTrapezoid; i++) {
+            double b = (i == numberOfTrapezoid - 1) ? x2 : a + dx;
+            double vb = g(p1, p2, b);
 
-            double y1p1 = f(p1, xi);
-            double y1p2 = f(p2, xi);
-            double y2p1 = f(p1, nextx);
-            double y2p2 = f(p2, nextx);
+            // אם יש שינוי סימן ב-[a,b] → יש נקודת חיתוך
+            if (va * vb <= 0) {
+                // מוצאים את נקודת החיתוך המדויקת
+                double xr = sameValue(p1, p2, a, b, EPS);
 
-            double dLeft = Math.abs(y1p1 - y1p2);
-            double dRight = Math.abs(y2p1 - y2p2);
+                // שטח ב-[a, xr]
+                sum += areaSegment(p1, p2, a, xr);
 
-            double A = (dLeft + dRight) * 0.5 * dx;
-            ans += A;
+                // שטח ב-[xr, b]
+                sum += areaSegment(p1, p2, xr, b);
+            } else {
+                // אין שינוי סימן → כל הקטע עם אותו סימן
+                sum += areaSegment(p1, p2, a, b);
+            }
+
+            a = b;
+            va = vb;
         }
-		return ans;
-	}
+
+        return sum;
+    }
+
 	/**
 	 * This function computes the array representation of a polynomial function from a String
 	 * representation. Note:given a polynomial function represented as a double array,
@@ -422,5 +434,11 @@ public class Ex1 {
     }
     private static double g(double[] p1,double[] p2 , double x){
         return f(p1, x) - f(p2, x);
+    }
+    private static double areaSegment(double[] p1, double[] p2, double a, double b) {
+        double fa = g(p1, p2, a);
+        double fb = g(p1, p2, b);
+        double integral = (fa + fb) * 0.5 * (b - a);
+        return Math.abs(integral);
     }
 }
