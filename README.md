@@ -80,6 +80,10 @@ Example:
 "-1.0x^2 + 3.0x + 2.0" <--> {2.0, 3.0, -1.0}
 
 ---
+## ScreenShot of the result
+
+![img.png](img.png)
+---
 
 ## Author
 
