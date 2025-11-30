@@ -90,6 +90,7 @@ public class Ex1 {
 
 		return ans;
 	}
+
 	/** Two polynomials functions are equal if and only if they have the same values f(x) for n+1 values of x,
 	 * where n is the max degree (over p1, p2) - up to an epsilon (aka EPS) value.
 	 * @param p1 first polynomial function
@@ -97,17 +98,18 @@ public class Ex1 {
 	 * @return true iff p1 represents the same polynomial function as p2.
 	 */
 	public static boolean equals(double[] p1, double[] p2) {
-        boolean ans = true;
+        if (p1 == null || p2 == null) return false;
+
         int n = Math.max(p1.length, p2.length) - 1;
-        for(int x=0; x<=n; x++){
+
+        for (int x = 0; x <= n; x++) {
             double y1 = f(p1, x);
             double y2 = f(p2, x);
-            if(Math.abs(y1 - y2) > EPS) {
-                ans = false;
-                break;
+            if (Math.abs(y1 - y2) > EPS) {
+                return false;
             }
         }
-        return ans;
+        return true;
 	}
 
 	/** 
@@ -162,20 +164,7 @@ public class Ex1 {
 
         return ans.toString();
     }
-
     /**
-     * given two polynomial functions (p1,p2) and an x value, returns the diffrence between them on point x
-     * @param p1 - first polynomial function
-     * @param p2 - second polynomial function
-     * @param x - point the function goes through
-     * @return - difference
-     */
-    public static double g(double[] p1,double[] p2 , double x){
-        return f(p1, x) - f(p2, x);
-    }
-
-
-	/**
 	 * Given two polynomial functions (p1,p2), a range [x1,x2] and an epsilon eps. This function computes an x value (x1<=x<=x2)
 	 * for which |p1(x) -p2(x)| < eps, assuming (p1(x1)-p2(x1)) * (p1(x2)-p2(x2)) <= 0.
 	 * @param p1 - first polynomial function
@@ -245,21 +234,35 @@ public class Ex1 {
 	 * @return the approximated area between the two polynomial functions within the [x1,x2] range.
 	 */
 	public static double area(double[] p1,double[]p2, double x1, double x2, int numberOfTrapezoid) {
-		double ans = 0;
-        double dx = (x2 - x1) / numberOfTrapezoid;
-        for(int i=0; i<numberOfTrapezoid; i++){
-            double xi = x1 + i*dx;
+        if (p1 == null || p2 == null || x1 == x2) return 0;
+
+        // make sure x1 bigger than x2
+        if (x2 < x1) {
+            double tmp = x1;
+            x1 = x2;
+            x2 = tmp;
+        }
+
+        // for better accuracy
+        int n = Math.max(numberOfTrapezoid, 1000);
+
+        double ans = 0;
+        double dx = (x2 - x1) / n;
+
+        for (int i = 0; i < n; i++) {
+            double xi = x1 + i * dx;
             double nextx = x1 + (i + 1) * dx;
-            double y1p1 = f(p1,xi);
+
+            double y1p1 = f(p1, xi);
             double y1p2 = f(p2, xi);
-            double y2p1 = f(p1,nextx);
+            double y2p1 = f(p1, nextx);
             double y2p2 = f(p2, nextx);
 
             double dLeft = Math.abs(y1p1 - y1p2);
             double dRight = Math.abs(y2p1 - y2p2);
-            double A = ((dLeft + dRight) / 2) * dx;
-            ans += A;
 
+            double A = (dLeft + dRight) * 0.5 * dx;
+            ans += A;
         }
 		return ans;
 	}
@@ -409,4 +412,15 @@ public class Ex1 {
 
         return ans;
 	}
+
+    private static int effectiveDegree(double[] p) {
+        int deg = p.length - 1;
+        while (deg > 0 && Math.abs(p[deg]) <= EPS) {
+            deg--;
+        }
+        return deg;
+    }
+    private static double g(double[] p1,double[] p2 , double x){
+        return f(p1, x) - f(p2, x);
+    }
 }

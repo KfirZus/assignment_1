@@ -44,6 +44,20 @@ class Ex1Test {
 		double f12x = Ex1.f(po12, x);
 		assertEquals(f1x + f2x, f12x, Ex1.EPS);
 	}
+    @Test
+    /**
+     * tests polynom of only free component
+     */
+    void testF3(){
+        double[] p = {Math.random()*10};
+        double x = Math.random()*10;
+        double px = Ex1.f(p,x);
+        assertEquals(p[0],px);
+    }
+    @Test
+    void testF4(){
+
+    }
 	@Test
 	/**
 	 * Tests that p1+p2+ (-1*p2) == p1
